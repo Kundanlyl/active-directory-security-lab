@@ -8,10 +8,10 @@ Designed and built an isolated Active Directory environment to map identity atta
 
 - Engineered a multi-VM Active Directory range with Windows Server 2019, a domain-connected Windows endpoint, Kali Linux, AD DS, DNS, DHCP, and isolated VMware networking.
 - Generated an enterprise-scale test dataset with more than 1,000 randomized directory users plus groups, OUs, computers, memberships, and intentionally unsafe ACL relationships.
-- Collected directory data with SharpHound and mapped multi-hop privilege paths toward Tier Zero assets with BloodHound.
+- Executed SharpHound collection against the owned `KLAYAL.LAB` domain, ingested seven directory-data files into BloodHound, and mapped multi-hop privilege paths toward Tier Zero assets.
 - Instrumented the Windows endpoint with Sysmon and Elastic Agent, then validated centralized process and host telemetry.
-- Simulated NTLM credential exposure and Pass-the-Hash behavior to evaluate credential reuse, lateral-movement risk, and endpoint-control effectiveness.
-- Developed detection hypotheses and remediation priorities for privileged-group changes, sensitive ACL modification, legacy authentication, and suspicious process activity.
+- Executed controlled password spraying, AS-REP roasting, Kerberoasting, and LSASS-dump tests, then correlated the activity with Windows Security and Sysmon telemetry.
+- Developed detection hypotheses and remediation priorities for privileged-group changes, sensitive ACL modification, credential attacks, legacy authentication, and suspicious process activity.
 
 ## Lab architecture
 
@@ -37,15 +37,20 @@ The lab used private addressing on an isolated VMware host-only network. Interne
 | --- | --- | --- |
 | Build | Configured the domain controller, Windows client, DHCP, and isolated network | [Lab architecture](docs/01-lab-architecture.md) |
 | Populate | Used BadBlood to generate realistic users, groups, OUs, computers, and unsafe ACL relationships | [Lab architecture](docs/01-lab-architecture.md) |
+| Collect | Generated and successfully ingested SharpHound computer, container, domain, GPO, group, OU, and user data | [Attack-path analysis](docs/02-attack-path-analysis.md) |
 | Map | Ingested directory data and inspected potential paths to privileged objects in BloodHound | [Attack-path analysis](docs/02-attack-path-analysis.md) |
 | Observe | Installed Sysmon, enrolled an Elastic Agent, and reviewed endpoint events | [Detection and telemetry](docs/03-detection-and-telemetry.md) |
-| Test | Examined NTLM credential risk and controlled Pass-the-Hash behavior | [Credential-security testing](docs/04-credential-security-testing.md) |
+| Test | Performed password spraying, AS-REP roasting, Kerberoasting, LSASS dumping, and controlled Pass-the-Hash exercises | [Credential-security testing](docs/04-credential-security-testing.md) |
 | Detect | Developed Elastic KQL and Splunk SPL hunting queries for identity and endpoint behaviors | [Detection queries](detections/README.md) |
 | Improve | Converted findings into preventive and detective controls | [Remediation](docs/05-remediation.md) |
 
 ## Representative evidence
 
 ### BloodHound path analysis
+
+![Successful ingestion of seven SharpHound data files](evidence/sharphound-file-ingestion.png)
+
+SharpHound collection from the owned domain produced seven object datasets that BloodHound accepted successfully before path analysis began.
 
 ![BloodHound path involving multiple directory objects](evidence/bloodhound-path-analysis.png)
 
@@ -63,6 +68,12 @@ Sysmon Event ID 1 supplied process, parent-process, command-line, user, integrit
 
 The Windows endpoint was enrolled through Elastic Agent, and generated activity was visible in the log data view.
 
+### Attack-to-event correlation
+
+![Failed logons generated during the controlled password-spraying test](evidence/password-spray-event-4625.png)
+
+Repeated Event ID 4625 records showed failed authentication activity generated during the authorized password-spraying test. Additional Kerberos and process evidence is documented in [Credential-security testing](docs/04-credential-security-testing.md).
+
 ## Tools and technologies
 
 - Windows Server 2019, Active Directory Domain Services, DNS, DHCP
@@ -71,7 +82,7 @@ The Windows endpoint was enrolled through Elastic Agent, and generated activity 
 - Kali Linux
 - BadBlood, SharpHound, BloodHound
 - Elastic Agent and Elastic Stack
-- Hashcat, Mimikatz, Metasploit (controlled lab exercises)
+- Atomic Red Team, Impacket, Mimikatz, ProcDump, Rubeus, Hashcat, CrackMapExec, and Metasploit (controlled lab exercises)
 
 ## Key findings
 
@@ -83,7 +94,7 @@ The Windows endpoint was enrolled through Elastic Agent, and generated activity 
 
 ## Validation notes
 
-BloodHound relationships were analyzed as potential attack paths and checked against their graph semantics; the repository does not equate a displayed path with successful exploitation of every edge. Credential tests that were blocked by endpoint controls are retained as control-validation results rather than misrepresented as compromises.
+BloodHound relationships were analyzed as potential attack paths and checked against their graph semantics; the repository does not equate a displayed path with successful exploitation of every edge. Password spraying, AS-REP roasting, Kerberoasting ticket retrieval, and a ProcDump-based LSASS dump succeeded in the lab. Kerberoasting ticket cracking was not completed, and live Mimikatz access attempts that failed or were blocked are not presented as successful compromises.
 
 ## Repository structure
 
@@ -102,8 +113,13 @@ active-directory-attack-defense-lab/
 │   ├── active-directory-population.png
 │   ├── bloodhound-path-analysis.png
 │   ├── bloodhound-privileged-relationships.png
+│   ├── asrep-event-4768.png
 │   ├── elastic-agent-status.png
 │   ├── elastic-event-ingestion.png
+│   ├── kerberoast-event-4769.png
+│   ├── lsass-sysmon-event-1.png
+│   ├── password-spray-event-4625.png
+│   ├── sharphound-file-ingestion.png
 │   └── sysmon-process-creation.png
 ├── .gitignore
 └── SECURITY.md

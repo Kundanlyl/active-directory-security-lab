@@ -1,0 +1,30 @@
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+
+# Sensitive lab artifacts
+*.kirbi
+*.ccache
+*.dmp
+*.dit
+*.sam
+*.hive
+*.hash
+*.hashes
+*.pcap
+*.pcapng
+*_BloodHound.zip
+*bloodhound*.json
+secrets/
+credentials/
+payloads/
+
+# Original coursework and exports
+original-submissions/
+*.docx
+*.pdf
+
