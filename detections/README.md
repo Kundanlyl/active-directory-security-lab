@@ -44,7 +44,49 @@ index=windows EventCode=5136
 
 **Triage:** Review the object distinguished name, before/after value if collected, effective permissions, and proximity to Tier Zero assets.
 
-## 3. RC4 Kerberos service tickets
+## 3. Password spraying across multiple accounts
+
+Event 4625 records failed logons. Password spraying becomes more useful to investigate when many distinct accounts are targeted from one source in a short period.
+
+### Elastic KQL
+
+```text
+event.code:"4625" and source.ip:*
+```
+
+Use this filter in a threshold or aggregation rule grouped by `source.ip`, counting distinct target users over a short interval.
+
+### Splunk SPL
+
+```text
+index=windows EventCode=4625
+| bucket _time span=5m
+| stats count AS failures dc(TargetUserName) AS targeted_accounts values(TargetUserName) AS users BY _time IpAddress
+| where failures >= 10 AND targeted_accounts >= 5
+```
+
+**Triage:** Check the source host, targeted accounts, failure reason, successful logons near the same time, and whether the source is an approved scanner or identity service.
+
+## 4. AS-REP roasting exposure
+
+A 4768 event with preauthentication type `0` can identify a ticket request for an account that does not require Kerberos preauthentication.
+
+### Elastic KQL
+
+```text
+event.code:"4768" and winlog.event_data.PreAuthType:"0"
+```
+
+### Splunk SPL
+
+```text
+index=windows EventCode=4768 Pre_Authentication_Type=0
+| table _time host TargetUserName IpAddress TicketEncryptionType Pre_Authentication_Type
+```
+
+**Triage:** Confirm whether preauthentication is intentionally disabled, review the source address and account history, and search for subsequent authentication or password-cracking indicators. Collector field names for preauthentication type vary and must be verified locally.
+
+## 5. RC4 Kerberos service tickets
 
 RC4-encrypted service-ticket requests can be relevant to Kerberoasting investigations, although legacy systems can create legitimate events.
 
@@ -64,7 +106,7 @@ index=windows EventCode=4769 TicketEncryptionType=0x17
 
 **Triage:** Compare the requester, source address, volume, targeted SPNs, encryption configuration, and the account's normal behavior. RC4 alone is not proof of Kerberoasting.
 
-## 4. Possible Pass-the-Hash behavior
+## 6. Possible Pass-the-Hash behavior
 
 Pass-the-Hash detection requires correlation; no single Windows event proves the technique. A useful starting point is a network logon using NTLM followed by privileged activity.
 
@@ -80,7 +122,7 @@ index=windows EventCode IN (4624,4672,4688)
 
 **Triage:** Validate the source host, account role, logon process, administrative share access, remote-service creation, and nearby endpoint alerts. Tune service accounts and expected management systems before alerting.
 
-## 5. Suspicious process creation from Sysmon
+## 7. Suspicious process creation from Sysmon
 
 ### Elastic KQL
 
