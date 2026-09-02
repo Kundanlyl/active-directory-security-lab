@@ -12,6 +12,9 @@
 ## Credential protection
 
 - Eliminate password reuse and enforce long, unique passwords.
+- Require MFA where supported and tune smart-lockout controls to reduce password-spraying risk.
+- Require Kerberos preauthentication for all accounts unless a documented exception exists.
+- Prefer AES for Kerberos service accounts, rotate weak service-account passwords, and retire unnecessary SPNs.
 - Reduce or disable NTLM where application compatibility permits.
 - Enable protections for LSASS and Windows Defender Credential Guard on supported systems.
 - Restrict administrative logons across tiers to reduce credential exposure.
@@ -22,6 +25,8 @@
 - Centralize Windows Security, Sysmon, PowerShell, and directory-service logs.
 - Alert on changes to privileged group membership and sensitive ACLs.
 - Investigate unusual Kerberos service-ticket patterns and legacy authentication use.
+- Aggregate failed logons by source address and distinct target accounts to identify password spraying.
+- Alert on unexpected Event ID 4768 requests with preauthentication type `0`.
 - Monitor endpoint-protection blocks and repeated attempts to access LSASS.
 - Baseline legitimate administrative tools and investigate deviations from normal parent-child process behavior.
 
@@ -42,4 +47,3 @@
 | High | Centralize directory and endpoint telemetry | Makes identity abuse visible and investigable |
 | Medium | Reduce legacy authentication and harden remote services | Shrinks common credential-abuse paths |
 | Ongoing | Re-run graph collection and validate detections | Confirms that remediation remains effective |
-

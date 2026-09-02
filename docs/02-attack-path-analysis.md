@@ -6,11 +6,16 @@ The objective was to turn raw directory relationships into an identity-risk asse
 
 ## Method
 
-1. Collected directory relationship data from the owned lab using SharpHound.
-2. Ingested the resulting dataset into BloodHound.
-3. Reviewed paths to high-value and Tier Zero objects.
-4. Examined relationships such as group membership, `GenericAll`, `WriteDACL`, `WriteOwner`, and `GenericWrite`.
-5. Traced longer paths beginning with lower-privileged objects rather than documenting only direct control over a privileged group.
+1. Ran SharpHound against the owned `KLAYAL.LAB` domain.
+2. Generated computer, container, domain, GPO, group, OU, and user datasets.
+3. Successfully ingested all seven collection files into BloodHound.
+4. Reviewed data quality and queried paths to high-value and Tier Zero objects.
+5. Examined relationships such as group membership, `GenericAll`, `WriteDACL`, `WriteOwner`, and `GenericWrite`.
+6. Traced longer paths beginning with lower-privileged objects rather than documenting only direct control over a privileged group.
+
+![BloodHound file-ingest view showing seven successful SharpHound datasets](../evidence/sharphound-file-ingestion.png)
+
+This ingestion result connects the graph analysis directly to the author's own Active Directory environment rather than vendor-provided sample data.
 
 ## Analysis example
 
